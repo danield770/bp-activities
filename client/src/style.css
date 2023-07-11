@@ -121,6 +121,10 @@ button {
   border: 0;
   background: none;
 }
+input,
+button {
+  font: inherit;
+}
 /* a {
   color: #00b7ff;
 } */

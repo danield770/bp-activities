@@ -57,9 +57,9 @@ const sortedData = computed(() => {
 });
 
 function hideActivity(id) {
-  const updatedHidden = [...hiddenActivities, id];
+  const updatedHidden = [...hiddenActivities.value, id];
+  hiddenActivities.value = updatedHidden;
   localStorage.setItem('hidden', JSON.stringify(updatedHidden));
-  setHiddenActivities(updatedHidden);
 }
 function changeFilter(currentFilter) {
   filter = currentFilter;
@@ -84,7 +84,7 @@ function filterByActivityName(searchText) {
         <MonthlyActivities
           :monthData="monthData"
           :endPoint="activitiesEndpoint"
-          :hideActivity="hideActivity"
+          @hideActivity="hideActivity"
         />
       </ul>
     </div>
