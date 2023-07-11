@@ -6,6 +6,7 @@ import { useActivityQuery } from '../composables/useActivityQuery';
 import { activityConfig } from '../config/activities';
 import MonthlyActivities from './MonthlyActivities.vue';
 import Filters from './Filters.vue';
+import Search from './Search.vue';
 
 const activitiesEndpoint = '/activities/v1';
 const queryKey = 'activities';
@@ -26,6 +27,14 @@ const dataWithHiddenActivities = ref(null);
 watch(data1, (newData) => {
   dataWithDisplayName.value = prepareData(newData);
   console.log('newData', [...dataWithDisplayName.value]);
+});
+
+const activityNames = computed(() => {
+  if (!dataWithDisplayName.value?.length) return [];
+
+  return removeDuplicates(
+    dataWithDisplayName.value.map((activity) => activity.displayName)
+  ).sort();
 });
 
 const sortedData = computed(() => {
@@ -67,12 +76,16 @@ function changeFilter(currentFilter) {
   filter.value = currentFilter;
 }
 function filterByActivityName(searchText) {
-  searchFilter = searchText;
+  searchFilter.value = searchText;
 }
 </script>
 
 <template>
   <div>
+    <Search
+      :activityNames="activityNames"
+      @filterByActivityName="filterByActivityName"
+    />
     <Filters
       :filters="activityConfig"
       :currentFilter="filter"
@@ -99,72 +112,6 @@ function filterByActivityName(searchText) {
 </template>
 
 <style scoped>
-.search-wpr {
-  display: flex;
-  width: 570px;
-  height: 50px;
-  margin: 26px 0;
-  position: relative;
-}
-.search-input {
-  flex: 1;
-  border: 1px solid #cbcccd;
-  border-right: 0;
-  border-radius: 6px 0 0 6px;
-  padding: 0 8px;
-}
-.search-input:focus {
-  display: block;
-  border-radius: 6px 0 0 0;
-  outline: 0;
-}
-.search-input:focus-visible {
-  box-shadow: inset 0 0 1px 1px currentColor;
-}
-.search-wpr:focus-within + .search-results {
-  display: block;
-}
-.reset-btn {
-  background: none;
-  position: absolute;
-  right: 50px;
-  top: 12px;
-}
-.search-btn.search-btn {
-  width: 48px;
-  background-color: #008081;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 0 6px 6px 0;
-  color: white;
-}
-.search-results {
-  position: absolute;
-  top: 126px;
-  width: 570px;
-  max-height: 265px;
-  overflow: auto;
-  background-color: white;
-  border: 1px solid #cbcccd;
-  display: none;
-  z-index: 1;
-}
-.search-result {
-  padding: 0 8px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-.search-input::placeholder {
-  font-weight: 500;
-}
-.no-results {
-  color: red;
-  position: relative;
-  top: -20px;
-}
 .modal-wrapper {
   position: fixed;
   inset: 0;

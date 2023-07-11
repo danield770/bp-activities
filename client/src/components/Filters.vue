@@ -86,12 +86,14 @@ const value = ref(props.currentFilter);
   gap: 12px;
   min-height: 85px;
   align-items: center;
-  margin-bottom: 15px;
+  margin: 0 0 15px 0;
   font-weight: 500;
 }
 .filter {
   height: 40px;
   display: flex;
+  position: relative;
+  left: -6px; /* TODO: understand why list is pushed to the right */
 }
 .filter input {
   width: 0;
