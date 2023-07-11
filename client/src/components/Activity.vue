@@ -10,8 +10,7 @@ import Search from './Search.vue';
 
 const activitiesEndpoint = '/activities/v1';
 const queryKey = 'activities';
-
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 10; /* Change this value to test the load more logic */
 
 const { isLoading, isError, isFetching, data, error } = useActivityQuery();
 
@@ -22,7 +21,7 @@ const hiddenActivities = ref(JSON.parse(localStorage.getItem('hidden')) || []);
 
 const data1 = ref(data);
 const dataWithDisplayName = ref(null);
-const dataWithHiddenActivities = ref(null);
+const total_items = ref(0);
 
 watch(data1, (newData) => {
   dataWithDisplayName.value = prepareData(newData);
@@ -37,7 +36,7 @@ const activityNames = computed(() => {
   ).sort();
 });
 
-const sortedData = computed(() => {
+const cappedSortedData = computed(() => {
   if (!dataWithDisplayName.value?.length) return [];
 
   const nonHiddenActivities = dataWithDisplayName.value.filter(
@@ -60,11 +59,19 @@ const sortedData = computed(() => {
             .includes(searchFilter.value.toLowerCase())
         );
   console.log({ searchFilteredData });
-  const sorted = searchFilteredData.length
+  const sortedData = searchFilteredData.length
     ? sortByMonth(searchFilteredData)
     : [];
-  console.log({ sorted });
-  return sorted;
+  //   console.log({ sortedData });
+
+  total_items.value = sortedData.length
+    ? sortedData.reduce((acc, item) => acc + item.length, 0)
+    : 0;
+  const numItemsToDisplay = Math.min(
+    total_items.value,
+    page.value * ITEMS_PER_PAGE
+  );
+  return capSortedData(sortedData, numItemsToDisplay);
 });
 
 function hideActivity(id) {
@@ -94,13 +101,13 @@ function filterByActivityName(searchText) {
     <span v-if="isLoading">Data is Loading...</span>
     <span v-else-if="isError">Error: {{ error.message }}</span>
     <!-- We can assume by this point that `isSuccess === true` -->
-    <div v-if="!sortedData.length && searchFilter">
+    <div v-if="!cappedSortedData.length && searchFilter">
       {{
         `No results for activity name '${searchFilter}' with filter '${filter}'`
       }}
     </div>
-    <div v-if="sortedData?.length">
-      <ul v-for="(monthData, index) in sortedData" :key="index">
+    <div v-if="cappedSortedData?.length">
+      <ul v-for="(monthData, index) in cappedSortedData" :key="index">
         <MonthlyActivities
           :monthData="monthData"
           :endPoint="activitiesEndpoint"
@@ -108,6 +115,33 @@ function filterByActivityName(searchText) {
         />
       </ul>
     </div>
+
+    <button
+      v-show="page < Math.ceil(total_items / ITEMS_PER_PAGE)"
+      type="button"
+      className="load-more"
+      @click="page += 1"
+    >
+      <svg
+        class="chevron-down"
+        stroke="currentColor"
+        fill="currentColor"
+        stroke-width="0"
+        viewBox="0 0 20 20"
+        aria-hidden="true"
+        height="20"
+        width="20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        ></path>
+      </svg>
+
+      Load more
+    </button>
   </div>
 </template>
 

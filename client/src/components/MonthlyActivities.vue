@@ -9,6 +9,7 @@ const props = defineProps({
   monthData: Array,
   endPoint: String,
 });
+// console.log('month data:', props.monthData);
 </script>
 
 <template>
@@ -148,7 +149,7 @@ const props = defineProps({
   height: 30px;
   left: 75px;
   bottom: -30px;
-  background: #cbcccd;
+  background: var(--borderColor);
 }
 .activity-item:first-child::before {
   bottom: auto;
