@@ -5,5 +5,3 @@ import Activity from '../components/Activity.vue';
 <template>
   <Activity />
 </template>
-
-<style scoped></style>

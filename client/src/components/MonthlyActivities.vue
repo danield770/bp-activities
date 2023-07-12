@@ -83,7 +83,7 @@ const props = defineProps({
           </span>
           <RouterLink
             class="link"
-            @mouseup="emit('openZoom', activity.id)"
+            @click="emit('openZoom', activity.id)"
             v-show="activityConfig[activity.resource_type].zoom"
             :to="`#${endPoint}/${activity.id}`"
           >

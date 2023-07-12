@@ -1,4 +1,7 @@
+<script setup>
+import ActivityV2 from '../components/ActivityV2.vue';
+</script>
+
 <template>
-  <h1>Activities V2</h1>
-  <!-- add dynamic class binding  here -->
+  <ActivityV2 />
 </template>

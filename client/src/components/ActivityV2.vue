@@ -1,7 +1,13 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { removeDuplicates, capSortedData } from '../util/helper';
-import { sortByMonth, prepareData } from '../util/helperV1';
+import {
+  sortByMonthV2,
+  prepareDataV2,
+  getDisplayNames,
+  getActivityById,
+  removeHiddenIds,
+} from '../util/helperV2';
 import { useActivityQuery } from '../composables/useActivityQuery';
 import { activityConfig } from '../config/activities';
 import MonthlyActivities from './MonthlyActivities.vue';
@@ -9,13 +15,13 @@ import Filters from './Filters.vue';
 import Search from './Search.vue';
 import Zoom from './Zoom.vue';
 
-const activitiesEndpoint = '/activities/v1';
-const queryKey = 'activitiesV2';
+const activitiesEndpoint = '/activities/v2';
+const queryKey = 'activities';
 const ITEMS_PER_PAGE = 10; /* Change this value to test the load more logic */
 
 const key = ref(window.location.hash.split('/').slice(-1)[0]);
 
-const { isLoading, isError, data, error } = useActivityQuery(
+const { isLoading, isError, isFetching, data, error } = useActivityQuery(
   activitiesEndpoint,
   queryKey
 );
@@ -30,23 +36,22 @@ const dataWithDisplayName = ref(null);
 const total_items = ref(0);
 
 watch(data1, (newData) => {
-  dataWithDisplayName.value = prepareData(newData);
+  dataWithDisplayName.value = prepareDataV2(newData);
   console.log('newData', [...dataWithDisplayName.value]);
 });
 
 const activityNames = computed(() => {
   if (!dataWithDisplayName.value?.length) return [];
 
-  return removeDuplicates(
-    dataWithDisplayName.value.map((activity) => activity.displayName)
-  ).sort();
+  return removeDuplicates(getDisplayNames(dataWithDisplayName.value)).sort();
 });
 
 const cappedSortedData = computed(() => {
   if (!dataWithDisplayName.value?.length) return [];
 
-  const nonHiddenActivities = dataWithDisplayName.value.filter(
-    (activity) => !hiddenActivities.value.includes(activity.id)
+  const nonHiddenActivities = removeHiddenIds(
+    dataWithDisplayName.value,
+    hiddenActivities.value
   );
   console.log({ nonHiddenActivities });
   const filteredData =
@@ -59,14 +64,17 @@ const cappedSortedData = computed(() => {
   const searchFilteredData =
     searchFilter.value === ''
       ? filteredData
-      : filteredData.filter((activity) =>
-          activity.displayName
-            .toLowerCase()
-            .includes(searchFilter.value.toLowerCase())
-        );
+      : filteredData.map((type) => ({
+          ...type,
+          activities: type.activities.filter((activity) =>
+            activity.displayName
+              .toLowerCase()
+              .includes(searchFilter.value.toLowerCase())
+          ),
+        }));
   console.log({ searchFilteredData });
-  const sortedData = searchFilteredData.length
-    ? sortByMonth(searchFilteredData)
+  const sortedData = searchFilteredData.some((type) => type.activities.length)
+    ? sortByMonthV2(searchFilteredData)
     : [];
   //   console.log({ sortedData });
 
@@ -92,11 +100,9 @@ function filterByActivityName(searchText) {
   searchFilter.value = searchText;
 }
 function closeZoom() {
-  //   console.log('close zoom');
   key.value = '';
 }
 function openZoom(id) {
-  //   console.log('open zoom', id);
   key.value = id;
 }
 console.log({ key });
@@ -164,8 +170,8 @@ console.log({ key });
     <Zoom
       v-if="key && dataWithDisplayName?.length"
       @closeZoom="closeZoom"
-      :version="v1"
-      :item="dataWithDisplayName.filter((i) => i.id === key)[0]"
+      version="v2"
+      :item="getActivityById(dataWithDisplayName, key)"
     />
   </div>
 </template>

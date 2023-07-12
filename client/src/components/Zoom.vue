@@ -7,22 +7,13 @@ import { RouterLink } from 'vue-router';
 import VisuallyHidden from '../components/VisuallyHidden.vue';
 
 const props = defineProps({
-  //   id: String,
+  version: String,
   item: Object,
 });
 
 const emit = defineEmits(['closeZoom']);
 
-// const key = window.location.pathname.split('/').slice(-1)[0];
-
-// console.log({ key });
 console.log('item: ', props.item);
-
-// const item = computed(() => {
-//   const z = data2.value?.filter((activity) => activity.id === key)[0];
-//   console.log({ z });
-//   return z;
-// });
 </script>
 
 <template>
@@ -30,7 +21,7 @@ console.log('item: ', props.item);
     <div class="modal-backdrop" />
     <div class="dialog" role="dialog" aria-modal="true" aria-label="{title}">
       <RouterLink
-        :to="{ name: 'activities' }"
+        :to="{ name: version === 'v2' ? 'activitiesV2' : 'activities' }"
         class="modal-close"
         @click="emit('closeZoom')"
       >
