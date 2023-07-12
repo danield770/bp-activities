@@ -46,11 +46,6 @@ export function capitalizeAll(string) {
   return newWords.join(' ');
 }
 
-export function resourceNameFromPath(path) {
-  //'/assets/topics/camouflage.png';
-  return path.split('/').at(-1).slice(0, -4);
-}
-
 export function removeDuplicates(arr) {
   return [...new Set(arr)];
 }

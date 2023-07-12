@@ -23,15 +23,6 @@ function handleSearchFilter(name) {
   showSuggestions.value = false;
 }
 
-// const hasNoResults = React.useMemo(() => {
-//     if (!showSuggestions) return false;
-
-//     // eslint-disable-next-line react/prop-types
-//     return activityNames.every(
-//       (name) => !name.toLowerCase().includes(searchText.toLowerCase())
-//     );
-//   }, [searchText]);
-
 const hasNoResults = computed(() => {
   if (!showSuggestions.value) return false;
 
@@ -40,14 +31,6 @@ const hasNoResults = computed(() => {
   );
 });
 
-//   const searchResults = React.useMemo(() => {
-//     if (!showSuggestions) return [];
-
-//     // eslint-disable-next-line react/prop-types
-//     return activityNames.filter((name) =>
-//       name.toLowerCase().includes(searchText.toLowerCase())
-//     );
-//   }, [searchText, showSuggestions]);
 const searchResults = computed(() => {
   if (!showSuggestions.value) return [];
   return props.activityNames.filter((name) =>
@@ -194,16 +177,5 @@ const searchResults = computed(() => {
   color: red;
   position: relative;
   top: -20px;
-}
-.visually-hidden {
-  display: inline-block;
-  position: absolute;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  height: 1px;
-  width: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
 }
 </style>

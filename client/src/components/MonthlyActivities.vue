@@ -1,9 +1,9 @@
 <script setup>
-import { extractMonth, formatDate, resourceNameFromPath } from '../util/helper';
+import { extractMonth, formatDate } from '../util/helper';
 import { activityConfig, imgBackgrounds } from '../config/activities';
 import { RouterLink } from 'vue-router';
 
-const emit = defineEmits(['hideActivity']);
+const emit = defineEmits(['hideActivity', 'openZoom']);
 
 const props = defineProps({
   monthData: Array,
@@ -83,8 +83,9 @@ const props = defineProps({
           </span>
           <RouterLink
             class="link"
+            @mouseup="emit('openZoom', activity.id)"
             v-show="activityConfig[activity.resource_type].zoom"
-            :to="`${endPoint}/${activity.id}`"
+            :to="`#${endPoint}/${activity.id}`"
           >
             <span class="font-bold">
               <svg

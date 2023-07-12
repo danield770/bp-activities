@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Activities from '../views/Activities.vue';
+import ActivitiesZoom from '../views/ActivitiesZoom.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,7 +21,12 @@ const router = createRouter({
     {
       path: '/activities/v1/:key',
       name: 'zoom',
-      component: () => import('../views/ActivitiesZoom.vue'),
+      component: Activities,
+      //   props: true,
+      //   components: {
+      //     default: Activities,
+      //     a: ActivitiesZoom,
+      //   }, //,, //() => import('../views/ActivitiesZoom.vue'),
     },
     {
       path: '/activities/v2/:key',

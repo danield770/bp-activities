@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { removeDuplicates, capSortedData } from '../util/helper';
 import { sortByMonth, prepareData } from '../util/helperV1';
 import { useActivityQuery } from '../composables/useActivityQuery';
@@ -7,12 +7,36 @@ import { activityConfig } from '../config/activities';
 import MonthlyActivities from './MonthlyActivities.vue';
 import Filters from './Filters.vue';
 import Search from './Search.vue';
+import Zoom from './Zoom.vue';
 
 const activitiesEndpoint = '/activities/v1';
 const queryKey = 'activities';
 const ITEMS_PER_PAGE = 10; /* Change this value to test the load more logic */
 
-const { isLoading, isError, isFetching, data, error } = useActivityQuery();
+const key = ref(window.location.hash.split('/').slice(-1)[0]);
+// window.addEventListener('hashchange', () => {
+//   console.log('The hash has changed!');
+//   currentPath.value = window.location.hash;
+// });
+// function handleHashChange() {
+//   console.log('The hash has changed!');
+//   currentPath.value = window.location.hash;
+// }
+// onMounted(() => {
+//   window.addEventListener('hashchange', handleHashChange);
+// });
+
+// onUnmounted(() => {
+//   window.removeEventListener('hashchange', handleHashChange);
+// });
+// const key = computed(() => {
+//   return currentPath.value.split('/').slice(-1)[0];
+// });
+
+const { isLoading, isError, isFetching, data, error } = useActivityQuery(
+  activitiesEndpoint,
+  queryKey
+);
 
 const filter = ref('all');
 const searchFilter = ref('');
@@ -85,127 +109,92 @@ function changeFilter(currentFilter) {
 function filterByActivityName(searchText) {
   searchFilter.value = searchText;
 }
+function closeZoom() {
+  key.value = '';
+}
+function openZoom(id) {
+  key.value = id;
+}
+console.log({ key });
 </script>
 
 <template>
   <div>
-    <Search
-      :activityNames="activityNames"
-      @filterByActivityName="filterByActivityName"
-    />
-    <Filters
-      :filters="activityConfig"
-      :currentFilter="filter"
-      @changeFilter="changeFilter"
-    />
-    <span v-if="isLoading">Data is Loading...</span>
-    <span v-else-if="isError">Error: {{ error.message }}</span>
-    <!-- We can assume by this point that `isSuccess === true` -->
-    <div v-if="!cappedSortedData.length && searchFilter">
-      {{
-        `No results for activity name '${searchFilter}' with filter '${filter}'`
-      }}
-    </div>
-    <div v-if="cappedSortedData?.length">
-      <ul v-for="(monthData, index) in cappedSortedData" :key="index">
-        <MonthlyActivities
-          :monthData="monthData"
-          :endPoint="activitiesEndpoint"
-          @hideActivity="hideActivity"
-        />
-      </ul>
-    </div>
+    <div class="wpr">
+      <h1 class="heading">Timeline</h1>
+      <Search
+        :activityNames="activityNames"
+        @filterByActivityName="filterByActivityName"
+      />
+      <Filters
+        :filters="activityConfig"
+        :currentFilter="filter"
+        @changeFilter="changeFilter"
+      />
+      <span v-if="isLoading">Data is Loading...</span>
+      <span v-else-if="isError">Error: {{ error.message }}</span>
+      <!-- We can assume by this point that `isSuccess === true` -->
+      <div v-if="!cappedSortedData.length && searchFilter">
+        {{
+          `No results for activity name '${searchFilter}' with filter '${filter}'`
+        }}
+      </div>
+      <div v-if="cappedSortedData?.length">
+        <ul v-for="(monthData, index) in cappedSortedData" :key="index">
+          <MonthlyActivities
+            :monthData="monthData"
+            :endPoint="activitiesEndpoint"
+            @hideActivity="hideActivity"
+            @openZoom="openZoom"
+          />
+        </ul>
+      </div>
 
-    <button
-      v-show="page < Math.ceil(total_items / ITEMS_PER_PAGE)"
-      type="button"
-      className="load-more"
-      @click="page += 1"
-    >
-      <svg
-        class="chevron-down"
-        stroke="currentColor"
-        fill="currentColor"
-        stroke-width="0"
-        viewBox="0 0 20 20"
-        aria-hidden="true"
-        height="20"
-        width="20"
-        xmlns="http://www.w3.org/2000/svg"
+      <button
+        v-show="page < Math.ceil(total_items / ITEMS_PER_PAGE)"
+        type="button"
+        className="load-more"
+        @click="page += 1"
       >
-        <path
-          fill-rule="evenodd"
-          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-          clip-rule="evenodd"
-        ></path>
-      </svg>
+        <svg
+          class="chevron-down"
+          stroke="currentColor"
+          fill="currentColor"
+          stroke-width="0"
+          viewBox="0 0 20 20"
+          aria-hidden="true"
+          height="20"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
 
-      Load more
-    </button>
+        Load more
+      </button>
+    </div>
+    <Zoom
+      @closeZoom="closeZoom"
+      v-if="key && dataWithDisplayName?.length"
+      :item="dataWithDisplayName.filter((i) => i.id === key)[0]"
+    />
   </div>
 </template>
 
 <style scoped>
-.modal-wrapper {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-content: center;
-}
-.modal-backdrop {
-  position: absolute;
-  inset: 0;
-  /* background: hsl(0deg 0% 0% / 0.5); // uncomment to set a backdrop */
-}
-.dialog {
-  position: relative;
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  height: 300px;
-  aspect-ratio: 1.75;
-  border: 2px solid #a9aaab;
-}
-.modal-close {
-  color: #a9aaab;
-  position: absolute;
-  top: 12px;
-  right: 12px;
-}
-.modal-content {
-  text-align: center;
-  height: 100%;
-}
-.dialog .activity-img {
-  width: 52px;
-  height: 52px;
-  left: 0;
-  right: 0;
+.wpr {
+  max-width: 1600px;
   margin: auto;
+  color: var(--primary);
+  padding: 12px;
 }
-.dialog .activity-name {
-  font-size: 1.8rem;
-  font-weight: 500;
-  margin: 10px 0;
-}
-.dialog .junior-tag {
-  width: 20px;
-  height: 20px;
-  font-size: 0.8rem;
-}
-.dialog .activity-date {
-  font-size: 1rem;
-}
-.dialog .comment {
-  text-align: left;
-  margin-top: 20px;
-  font-size: 1.2rem;
-}
-.dialog .score {
-  position: absolute;
-  left: 24px;
-  bottom: 18px;
-  color: #008081;
+.heading {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
 }
 .load-more {
   color: #008081;
